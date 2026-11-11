@@ -6,8 +6,10 @@ jobs:
     steps:
       - run: |
           for d in cyber-kyiv.online www.cyber-kyiv.online svitlo-kyiv.online www.svitlo-kyiv.online; do
-            echo "== $d"; dig +short A $d @1.1.1.1; dig +short CNAME $d @1.1.1.1; dig +short NS ${d#www.} @1.1.1.1 | head -2
+            echo "== $d"; for t in A AAAA CNAME CAA TXT MX; do echo "  $t: $(dig +short $t $d @1.1.1.1 | tr '\n' ' ')"; done
+            echo "  A via ns10.uadns.com: $(dig +short A $d @ns10.uadns.com | tr '\n' ' ')  AAAA: $(dig +short AAAA $d @ns10.uadns.com | tr '\n' ' ')"
           done
+          echo "== cert served for cyber-kyiv.online:"; echo | openssl s_client -connect cyber-kyiv.online:443 -servername cyber-kyiv.online 2>/dev/null | openssl x509 -noout -subject -issuer -dates 2>/dev/null || true
           for u in https://cyber-kyiv.online/ http://cyber-kyiv.online/ https://svitlo-kyiv.online/ http://svitlo-kyiv.online/; do
             echo "== $u"; curl -sS -m 20 -o /tmp/p -w "%{http_code} %{redirect_url}\n" "$u" || true; grep -o '<title>[^<]*' /tmp/p | head -1 || true
           done
