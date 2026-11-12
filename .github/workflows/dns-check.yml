@@ -5,10 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          for d in cyber-kyiv.online www.cyber-kyiv.online; do
-            for r in 8.8.8.8 1.1.1.1 9.9.9.9 208.67.222.222 ns10.uadns.com ns11.uadns.com; do
-              echo "$d @$r: $(dig +noall +answer A $d @$r | awk '{print $2, $4, $5}' | tr '\n' ' ')"
-            done
+          for d in cyber-kyiv.online svitlo-kyiv.online; do
+            echo "== cert $d"; echo | openssl s_client -connect $d:443 -servername $d 2>/dev/null | openssl x509 -noout -subject -dates 2>/dev/null || true
+            echo "== https $d: $(curl -sS -m 20 -o /dev/null -w '%{http_code}' https://$d/ 2>&1)"
+            echo "== http $d: $(curl -sS -m 20 -o /dev/null -w '%{http_code} %{redirect_url}' http://$d/ 2>&1)"
           done
-          dig +noall +answer SOA cyber-kyiv.online @ns10.uadns.com
-          echo "== http"; curl -sS -m 20 -o /dev/null -w "%{http_code}\n" -H "Host: cyber-kyiv.online" http://185.199.108.153/
